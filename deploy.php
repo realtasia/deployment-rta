@@ -1,127 +1,157 @@
-<?php
-	date_default_timezone_set('Asia/Singapore');
+<?php date_default_timezone_set('Asia/Singapore');
 
-	/**
-	 * Simple interface that subclasses should implement
-	 */
-	 interface iDeploy{
-		 /**
-		  * Set defaults for this repo
-		  */
-		public function init();
-	 }
+/**
+ * Simple interface that subclasses should implement
+ */
+interface iDeploy {
 
-	/**
-	 * Generic class for all repository classes to extend.
-	 * Subclasses must implement a init() method
-	 */
-	class Deploy{
+    /**
+     * Set defaults for this repo, normally just a change to the repository
+     * location
+     */
+    public function init();
+}
 
-		public $repository = "~/repos/";
+/**
+ * Generic class for all repository classes to extend.
+ * Subclasses must implement a init() method
+ */
+class Deploy {
 
-		protected $_remote = "bitbucket";
+    public $repository = "~/repos/";
+    protected $_remote = "bitbucket";
+    protected $_branch = "master";
 
-		protected $_branch = "master";
+    public function __construct($repo = null)
+    {
+        if (class_exists(ucfirst(strtolower($repo))))
+        {
+            $repo = new $repo;
+            if (is_subclass_of($repo, "Deploy"))
+            {
+                $repo->run("init");
+                return $repo;
+            }
+        }
 
-		public function __construct($repo = null)
-		{
-			if(class_exists($repo))
-			{
-				$repo = new $repo;
-				if(is_subclass_of($repo, "Deploy"))
-				{
-					$repo->run("init");
-					return $repo;
-				}
-			}
+        return $this;
+    }
 
-			return $this;
-		}
+    /**
+     * A static factory method
+     * */
+    public static function factory($repo = null)
+    {
+        return new Deploy($repo);
+    }
 
-		/**
-		 * A static factory method
-		 * */
-		public static function factory($repo = null)
-		{
-			return new Deploy($repo);
-		}
+    /**
+     * A simple method that runs internal callbacks if they are callable
+     * */
+    protected function run($event)
+    {
+        if (is_callable([$this, $event]))
+        {
+            return $this->{$event}();
+        }
 
-		/**
-		 * A simple method that runs internal callbacks if they are callable
-		 * */
-		protected function run($event)
-		{
-			if(is_callable([$this, $event]))
-			{
-				return $this->{$event}();
-			}
+        return true;
+    }
 
-			return true;
-		}
+    public function execute()
+    {
+        try
+        {
+            // Make sure we're in the right directory
+            exec('cd ' . $this->repository, $output);
+            //$this->log('Changing working directory... '.implode(' ', $output));
+            $this->run("before_pull");
 
-		public function execute()
-		{
-			try
-			{
-				// Make sure we're in the right directory
-				exec('cd ' . $this->repository, $output);
-				//$this->log('Changing working directory... '.implode(' ', $output));
-				$this->run("before_pull");
+            // In case any changes were made locally, make sure to reset it.
+            exec('git reset --hard HEAD', $output);
 
-				// In case any changes were made locally, make sure to reset it.
-				exec('git reset --hard HEAD', $output);
+            // pull changes
+            exec('git pull ' . $this->_remote . ' ' . $this->_branch, $output);
 
-				// pull changes
-				exec('git pull '.$this->_remote.' '.$this->_branch, $output);
+            $this->run("after_pull");
+        }
+        catch (Exception $e)
+        {
 
-				$this->run("after_pull");
-			}
-			catch(Exception $e)
-			{
+        }
+    }
 
-			}
-		}
+    /* Callbacks - Not in interface, cos not needed all the time */
 
-		/*Callbacks - Not in interface, cos not needed all the time*/
-		public function before_pull(){}
-		public function after_pull(){}
+    public function before_pull()
+    {
 
-	}
+    }
 
-	class Api extends Deploy implements iDeploy{
+    public function after_pull()
+    {
 
-		public function init()
-		{
-			$this->repository  = $this->repository . 'api.git';
-		}
+    }
 
-	}
+}
 
-	class App extends Deploy implements iDeploy{
+class Api extends Deploy implements iDeploy {
 
-		public function init()
-		{
-			$this->repository  = $this->repository . 'app.git';
-		}
+    public function init()
+    {
+        $this->repository = $this->repository . 'api.git';
+    }
 
-	}
+}
 
-	class Common extends Deploy implements iDeploy{
+class App extends Deploy implements iDeploy {
 
-		public function init()
-		{
-			$this->repository  = $this->repository . 'common.git';
-		}
+    public function init()
+    {
+        $this->repository = $this->repository . 'app.git';
+    }
 
-	}
+}
 
-	$repos = ["api", "app", "common"];
+class Common extends Deploy implements iDeploy {
 
-	if(!empty($_GET) && isset($_GET["repo"]) && in_array($_GET["repo"], $repos))
-	{
-		$repo = strtolower($_GET["repo"]);
-		return $d = Deploy::factory($repo)->execute();
-	}
-	header('HTTP/1.0 404 Not Found');
-	echo "<h1>The repository page was not found</h1h1>";
+    public function init()
+    {
+        $this->repository = $this->repository . 'common.git';
+    }
+
+    public function after_pull()
+    {
+        $path = $this->repository . "/kohana/modules/RT";
+        $init = realpath("$path/init.php");
+        $init_live = realpath("$path/init-live.php");
+
+        if(is_file($init) && is_file($init_live))
+        {
+            unlink ($init);
+            rename($init, $init_live);
+        }
+    }
+
+}
+
+class Deployment extends Deploy implements iDeploy {
+
+    public function init()
+    {
+        $this->repository = $this->repository . 'deployment.git';
+    }
+
+}
+
+$repos = ["api", "app", "common"];
+
+if (!empty($_GET) && isset($_GET["repo"]) && in_array($_GET["repo"], $repos))
+{
+    $repo = strtolower($_GET["repo"]);
+    Deploy::factory($repo)->execute();
+    echo "Deployed $repo";
+}
+header('HTTP/1.0 404 Not Found');
+echo "<h1>The repository page was not found</h1>";
 ?>
