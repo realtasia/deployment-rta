@@ -63,7 +63,7 @@ class Deploy {
         try
         {
             // Make sure we're in the right directory
-            exec('cd ' . $this->repository, $output);
+            exec('cd ' . realpath($this->repository), $output);
             //$this->log('Changing working directory... '.implode(' ', $output));
             $this->run("before_pull");
 
