@@ -144,13 +144,14 @@ class Deployment extends Deploy implements iDeploy {
 
 }
 
-$repos = ["api", "app", "common"];
+$repos = ["api", "app", "common", "deployment"];
 
 if (!empty($_GET) && isset($_GET["repo"]) && in_array($_GET["repo"], $repos))
 {
     $repo = strtolower($_GET["repo"]);
     Deploy::factory($repo)->execute();
-    echo "Deployed $repo";
+    echo "<h1>Deployed $repo</h1>";
+    exit;
 }
 header('HTTP/1.0 404 Not Found');
 echo "<h1>The repository page was not found</h1>";
