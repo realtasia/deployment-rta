@@ -14,11 +14,11 @@ server {
 		try_files $uri $uri/ /index.php?$args;
 	}
 
-	#pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000	
+	#pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
 	location ~ \.php$ {
 		fastcgi_split_path_info ^(.+\.php)(/.+)$;
 		# NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
-	
+
 		# With php5-cgi alone:
 		#fastcgi_pass 127.0.0.1:9000;
 		# With php5-fpm:
@@ -28,13 +28,6 @@ server {
 		include fastcgi_params;
 		fastcgi_read_timeout 50m;
 		include fastcgi_params;
-	}
-
-	location ~* \.(?:js|css|gif|jpg|jpeg|png)$ {
-		expires max;
-		#gzip_static on;
-		add_header Cache-Control "public, must-revalidate, proxy-revalidate";
-		
 	}
 
 	location /uploads {
@@ -49,7 +42,7 @@ server {
 		set $download_uri $2;
 		set $download_host $1;
 		set $download_file http://$download_host/$download_uri;
-		
+
 		proxy_set_header Host $download_host;
 		proxy_set_header Authorization '';
 		proxy_max_temp_file_size 0;
