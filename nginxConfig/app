@@ -1,0 +1,59 @@
+server {
+	root /home/manager/www/app;
+	index index.html index.htm index.php;
+
+	server_name app.realtasia.com;
+
+	location = /favicon.ico {
+	  return 204;
+	  access_log     off;
+	  log_not_found  off;
+	}
+
+	location / {
+		try_files $uri $uri/ /index.php?$args;
+	}
+
+	#pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000	
+	location ~ \.php$ {
+		fastcgi_split_path_info ^(.+\.php)(/.+)$;
+		# NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
+	
+		# With php5-cgi alone:
+		#fastcgi_pass 127.0.0.1:9000;
+		# With php5-fpm:
+		fastcgi_pass unix:/var/run/php5-fpm.sock;
+		fastcgi_index index.php;
+		fastcgi_send_timeout 50m;
+		include fastcgi_params;
+		fastcgi_read_timeout 50m;
+		include fastcgi_params;
+	}
+
+	location ~* \.(?:js|css|gif|jpg|jpeg|png)$ {
+		expires max;
+		#gzip_static on;
+		add_header Cache-Control "public, must-revalidate, proxy-revalidate";
+		
+	}
+
+	location /uploads {
+		autoindex off;
+	}
+
+	location ~* ^/s3/(.*?)/(.*) {
+		internal;
+		resolver 8.8.8.8;
+		access_log /var/log/nginx/s3.access.log;
+		error_log /var/log/nginx/s3.error.log;
+		set $download_uri $2;
+		set $download_host $1;
+		set $download_file http://$download_host/$download_uri;
+		
+		proxy_set_header Host $download_host;
+		proxy_set_header Authorization '';
+		proxy_max_temp_file_size 0;
+		proxy_pass $download_file;
+    }
+
+}
