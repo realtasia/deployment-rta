@@ -1,0 +1,22 @@
+{
+  "sourceDocuments": 6994,
+  "outputDocuments": 6994,
+  "sourceBytes": 4580920,
+  "outputBytes": 4581376,
+  "uniqueIndexes": 34,
+  "identityArraysEmpty": true,
+  "ownersSanitised": true,
+  "idsPreserved": true,
+  "topLevelShapePreserved": true,
+  "pagesSha256": "5be0843b916e1a9c0f86ca1ea661ff9d69e4c109cfe4317d614e13e9ad3bae72",
+  "singpostDocuments": 265678,
+  "singpostSourceBytes": 93599404,
+  "singpostOutputBytes": 92668666,
+  "singpostGzipBytes": 9078245,
+  "singpostIdsPreserved": true,
+  "singpostShapePreserved": true,
+  "singpostSourceFieldsSanitised": 22492,
+  "singpostCommentFieldsSanitised": 1624,
+  "singpostRawSha256": "b2bbd9c5c0bd55dc0daed896e07019cbfda78cfdc76f5374ac9966300dc2c3f0",
+  "singpostGzipSha256": "bafe3014616e98c333ebca702a5674c33b41c4dbf2fe6261f83e52bd2290d3b6"
+}

@@ -11,7 +11,7 @@ adduser $USER www-data
 cd $HME
 
 #get the deployment scripts
-wget "https://s3-ap-southeast-1.amazonaws.com/cbrepo/deployRealtasia/deployRealtasia.tgz"
+wget "https://archive.invalid/redacted-deployment-bundle.tgz"
 tar -zxvf deployRealtasia.tgz
 
 #add ssh access and change permissions.
